@@ -6,11 +6,10 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 
-const int BTN_PIN_R = 28;
-const int BTN_PIN_Y = 21;
-
-const int LED_PIN_R = 5;
-const int LED_PIN_Y = 10;
+#define BTN_PIN_R 28
+#define BTN_PIN_Y 21
+#define LED_PIN_R 5
+#define LED_PIN_Y 10
 
 QueueHandle_t xQueueBtn;
 SemaphoreHandle_t xSemaphoreLedR;
