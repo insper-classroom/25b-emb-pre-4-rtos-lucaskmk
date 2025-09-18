@@ -15,32 +15,32 @@ const int LED_PIN_G = 6;
 QueueHandle_t xQueueButId;
 QueueHandle_t xQueueButId2;
 
+void btn_callback(uint gpio, uint32_t events) {
+    static int delay_r = 0;
+    static int delay_g = 0;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    if (gpio == BTN_PIN_R && (events & GPIO_IRQ_EDGE_FALL)) {
+        if (delay_r < 1000) delay_r += 100;
+        else delay_r = 100;
+        xQueueSendFromISR(xQueueButId, &delay_r, &xHigherPriorityTaskWoken);
+    }
+    if (gpio == BTN_PIN_G && (events & GPIO_IRQ_EDGE_FALL)) {
+        if (delay_g < 1000) delay_g += 100;
+        else delay_g = 100;
+        xQueueSendFromISR(xQueueButId2, &delay_g, &xHigherPriorityTaskWoken);
+    }
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
 void btn_1_task(void *p) {
     gpio_init(BTN_PIN_R);
     gpio_set_dir(BTN_PIN_R, GPIO_IN);
     gpio_pull_up(BTN_PIN_R);
-
-    int delay = 0;
-    bool last = true;
+    gpio_set_irq_enabled_with_callback(BTN_PIN_R, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
 
     while (true) {
-        bool now = gpio_get(BTN_PIN_R);
-        if (last && !now) { // detecta borda de descida (apertou)
-            while (!gpio_get(BTN_PIN_R)) {
-                vTaskDelay(pdMS_TO_TICKS(10)); // espera soltar
-            }
-
-            // altera o delay em ciclos
-            if (delay < 1000) {
-                delay += 100;
-            } else {
-                delay = 100;
-            }
-
-            xQueueSend(xQueueButId, &delay, portMAX_DELAY);
-        }
-        last = now;
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(100)); 
     }
 }
 
@@ -48,27 +48,10 @@ void btn_2_task(void *p) {
     gpio_init(BTN_PIN_G);
     gpio_set_dir(BTN_PIN_G, GPIO_IN);
     gpio_pull_up(BTN_PIN_G);
-
-    int delay = 0;
-    bool last = true;
+    gpio_set_irq_enabled_with_callback(BTN_PIN_G, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
 
     while (true) {
-        bool now = gpio_get(BTN_PIN_G);
-        if (last && !now) {
-            while (!gpio_get(BTN_PIN_G)) {
-                vTaskDelay(pdMS_TO_TICKS(10));
-            }
-
-            if (delay < 1000) {
-                delay += 100;
-            } else {
-                delay = 100;
-            }
-
-            xQueueSend(xQueueButId2, &delay, portMAX_DELAY);
-        }
-        last = now;
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(100)); 
     }
 }
 

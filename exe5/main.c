@@ -12,24 +12,21 @@ const int BTN_PIN_Y = 21;
 const int LED_PIN_R = 5;
 const int LED_PIN_Y = 10;
 
-// Recursos exigidos pelo enunciado
 QueueHandle_t xQueueBtn;
 SemaphoreHandle_t xSemaphoreLedR;
 SemaphoreHandle_t xSemaphoreLedY;
 
-enum BtnId { BTN_R, BTN_Y };
-
 void btn_callback(uint gpio, uint32_t events) {
     if ((events & GPIO_IRQ_EDGE_FALL)) {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        enum BtnId id;
+        uint8_t id;
 
         if (gpio == BTN_PIN_R) {
-            id = BTN_R;
+            id = 0;
             xQueueSendFromISR(xQueueBtn, &id, &xHigherPriorityTaskWoken);
         }
         if (gpio == BTN_PIN_Y) {
-            id = BTN_Y;
+            id = 1;
             xQueueSendFromISR(xQueueBtn, &id, &xHigherPriorityTaskWoken);
         }
 
@@ -38,12 +35,12 @@ void btn_callback(uint gpio, uint32_t events) {
 }
 
 void btn_task(void *p) {
-    enum BtnId id;
+    uint8_t id;
     while (true) {
         if (xQueueReceive(xQueueBtn, &id, portMAX_DELAY)) {
-            if (id == BTN_R) {
+            if (id == 0) {
                 xSemaphoreGive(xSemaphoreLedR);
-            } else if (id == BTN_Y) {
+            } else if (id == 1) {
                 xSemaphoreGive(xSemaphoreLedY);
             }
         }
@@ -100,7 +97,7 @@ void led_y_task(void *p) {
 
 int main() {
     stdio_init_all();
-    xQueueBtn      = xQueueCreate(32, sizeof(enum BtnId));
+    xQueueBtn      = xQueueCreate(32, sizeof(uint8_t));
     xSemaphoreLedR = xSemaphoreCreateBinary();
     xSemaphoreLedY = xSemaphoreCreateBinary();
 
