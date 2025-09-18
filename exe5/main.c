@@ -51,20 +51,23 @@ void led_r_task(void *p) {
     gpio_put(LED_PIN_R, 0);
 
     int blinking = 0;
-
+    int delay_g = 100; 
     while (true) {
         if (xSemaphoreTake(xSemaphoreLedR, portMAX_DELAY) == pdTRUE) {
             blinking = !blinking;
             if (!blinking) {
                 gpio_put(LED_PIN_R, 0);
+            } else {
+                if (delay_g < 1000) delay_g += 100;
+                else delay_g = 100;
             }
         }
 
         if (blinking) {
             gpio_put(LED_PIN_R, 1);
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(delay_g));
             gpio_put(LED_PIN_R, 0);
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(delay_g));
         } else {
             vTaskDelay(pdMS_TO_TICKS(10));
         }
@@ -77,25 +80,31 @@ void led_y_task(void *p) {
     gpio_put(LED_PIN_Y, 0);
 
     int blinking = 0;
+    int delay_g = 100;   
 
     while (true) {
         if (xSemaphoreTake(xSemaphoreLedY, portMAX_DELAY) == pdTRUE) {
             blinking = !blinking;
             if (!blinking) {
                 gpio_put(LED_PIN_Y, 0);
+            } else {
+                if (delay_g < 1000) delay_g += 100;
+                else delay_g = 100;
             }
         }
 
         if (blinking) {
             gpio_put(LED_PIN_Y, 1);
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(delay_g));
             gpio_put(LED_PIN_Y, 0);
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(delay_g));
         } else {
             vTaskDelay(pdMS_TO_TICKS(10));
         }
     }
 }
+
+
 
 int main() {
     stdio_init_all();
