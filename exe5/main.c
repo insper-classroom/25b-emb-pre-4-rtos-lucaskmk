@@ -16,11 +16,13 @@ SemaphoreHandle_t xSemBtnR;
 SemaphoreHandle_t xSemBtnY;
 
 void btn_callback(uint gpio, uint32_t events) {
-    if (gpio == BTN_PIN_R && (events & GPIO_IRQ_EDGE_FALL)) {
-        xSemaphoreGiveFromISR(xSemBtnR, 0);
-    }
-    if (gpio == BTN_PIN_Y && (events & GPIO_IRQ_EDGE_FALL)) {
-        xSemaphoreGiveFromISR(xSemBtnY, 0);
+    if ((events & GPIO_IRQ_EDGE_FALL)) {
+        if (gpio == BTN_PIN_R) {
+            xSemaphoreGiveFromISR(xSemBtnR, 0);
+        }
+        if (gpio == BTN_PIN_Y) {
+            xSemaphoreGiveFromISR(xSemBtnY, 0);
+        }
     }
 }
 
@@ -31,7 +33,7 @@ void led_r_task(void *p) {
     int blinking = 0;
 
     while (true) {
-        if (xSemaphoreTake(xSemBtnR, portMAX_DELAY) == pdTRUE) {
+        if (xSemaphoreTake(xSemBtnR, 0) == pdTRUE) {
             blinking = !blinking;
             if (!blinking) {
                 gpio_put(LED_PIN_R, 0);
@@ -56,7 +58,7 @@ void led_y_task(void *p) {
     int blinking = 0;
 
     while (true) {
-        if (xSemaphoreTake(xSemBtnY, portMAX_DELAY) == pdTRUE) {
+        if (xSemaphoreTake(xSemBtnY, 0) == pdTRUE) {
             blinking = !blinking;
             if (!blinking) {
                 gpio_put(LED_PIN_Y, 0);
@@ -76,10 +78,17 @@ void led_y_task(void *p) {
 
 int main() {
     stdio_init_all();
-    printf("Start RTOS\n");
 
     xSemBtnR = xSemaphoreCreateBinary();
     xSemBtnY = xSemaphoreCreateBinary();
+
+    gpio_init(BTN_PIN_R);
+    gpio_set_dir(BTN_PIN_R, GPIO_IN);
+    gpio_pull_up(BTN_PIN_R);
+
+    gpio_init(BTN_PIN_Y);
+    gpio_set_dir(BTN_PIN_Y, GPIO_IN);
+    gpio_pull_up(BTN_PIN_Y);
 
     gpio_set_irq_enabled_with_callback(BTN_PIN_R, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
     gpio_set_irq_enabled(BTN_PIN_Y, GPIO_IRQ_EDGE_FALL, true);
