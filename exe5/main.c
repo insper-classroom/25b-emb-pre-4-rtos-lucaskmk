@@ -111,10 +111,12 @@ int main() {
     gpio_set_dir(BTN_PIN_Y, GPIO_IN);
     gpio_pull_up(BTN_PIN_Y);
 
+    // Habilite as interrupções só depois de criar a fila e semáforos
     gpio_set_irq_enabled_with_callback(BTN_PIN_R, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
     gpio_set_irq_enabled(BTN_PIN_Y, GPIO_IRQ_EDGE_FALL, true);
 
-    xTaskCreate(btn_task, "BTN Task", 256, NULL, 2, NULL);
+    // Use prioridade 1 para todas as tasks (padrão dos testes)
+    xTaskCreate(btn_task, "BTN Task", 256, NULL, 1, NULL);
     xTaskCreate(led_r_task, "LED R", 256, NULL, 1, NULL);
     xTaskCreate(led_y_task, "LED Y", 256, NULL, 1, NULL);
 
