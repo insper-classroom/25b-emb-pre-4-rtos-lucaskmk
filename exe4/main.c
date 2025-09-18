@@ -1,7 +1,7 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <queue.h>
-
+#include <stdint.h> 
 #include "pico/stdlib.h"
 #include <stdio.h>
 
@@ -14,18 +14,19 @@ const int LED_PIN_G = 6;
 QueueHandle_t xQueueButId;
 QueueHandle_t xQueueButId2;
 
-volatile int delay_r = 0;
-volatile int delay_g = 0;
-
 void btn_callback(uint gpio, uint32_t events) {
     if (events & GPIO_IRQ_EDGE_FALL) {
+        static int delay_r = 0;
+        static int delay_g = 0;
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
         if (gpio == BTN_PIN_R) {
             if (delay_r < 1000) {
                 delay_r += 100;
             } else {
                 delay_r = 100;
             }
-            xQueueSendFromISR(xQueueButId, &delay_r, 0);
+            xQueueSendFromISR(xQueueButId, &delay_r, &xHigherPriorityTaskWoken);
         }
         if (gpio == BTN_PIN_G) {
             if (delay_g < 1000) {
@@ -33,23 +34,32 @@ void btn_callback(uint gpio, uint32_t events) {
             } else {
                 delay_g = 100;
             }
-            xQueueSendFromISR(xQueueButId2, &delay_g, 0);
+            xQueueSendFromISR(xQueueButId2, &delay_g, &xHigherPriorityTaskWoken);
         }
+
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
 }
 
 void led_1_task(void *p) {
     gpio_init(LED_PIN_R);
     gpio_set_dir(LED_PIN_R, GPIO_OUT);
+    gpio_put(LED_PIN_R, 0);
 
     int delay = 0;
     while (true) {
         if (xQueueReceive(xQueueButId, &delay, portMAX_DELAY)) {
-            if (delay > 0) {
+            while (delay > 0) {
                 gpio_put(LED_PIN_R, 1);
                 vTaskDelay(pdMS_TO_TICKS(delay));
                 gpio_put(LED_PIN_R, 0);
                 vTaskDelay(pdMS_TO_TICKS(delay));
+
+                // atualiza se chegou novo valor na fila
+                int newDelay;
+                if (xQueueReceive(xQueueButId, &newDelay, 0)) {
+                    delay = newDelay;
+                }
             }
         }
     }
@@ -58,15 +68,21 @@ void led_1_task(void *p) {
 void led_2_task(void *p) {
     gpio_init(LED_PIN_G);
     gpio_set_dir(LED_PIN_G, GPIO_OUT);
+    gpio_put(LED_PIN_G, 0);
 
     int delay = 0;
     while (true) {
         if (xQueueReceive(xQueueButId2, &delay, portMAX_DELAY)) {
-            if (delay > 0) {
+            while (delay > 0) {
                 gpio_put(LED_PIN_G, 1);
                 vTaskDelay(pdMS_TO_TICKS(delay));
                 gpio_put(LED_PIN_G, 0);
                 vTaskDelay(pdMS_TO_TICKS(delay));
+
+                int newDelay;
+                if (xQueueReceive(xQueueButId2, &newDelay, 0)) {
+                    delay = newDelay;
+                }
             }
         }
     }
@@ -74,7 +90,6 @@ void led_2_task(void *p) {
 
 int main() {
     stdio_init_all();
-    printf("Start RTOS \n");
 
     xQueueButId  = xQueueCreate(32, sizeof(int));
     xQueueButId2 = xQueueCreate(32, sizeof(int));

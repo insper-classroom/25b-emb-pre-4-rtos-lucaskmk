@@ -20,16 +20,24 @@ void btn_1_task(void *p) {
     gpio_set_dir(BTN_PIN_R, GPIO_IN);
     gpio_pull_up(BTN_PIN_R);
 
-    int delay = 250;  // blink delay
+    int delay = 0;
     bool last = true;
 
     while (true) {
         bool now = gpio_get(BTN_PIN_R);
-        if (last && !now) {  // button press
+        if (last && !now) { // detecta borda de descida (apertou)
             while (!gpio_get(BTN_PIN_R)) {
-                vTaskDelay(pdMS_TO_TICKS(10));  // wait for release
+                vTaskDelay(pdMS_TO_TICKS(10)); // espera soltar
             }
-            xQueueSend(xQueueButId, &delay, 0);
+
+            // altera o delay em ciclos
+            if (delay < 1000) {
+                delay += 100;
+            } else {
+                delay = 100;
+            }
+
+            xQueueSend(xQueueButId, &delay, portMAX_DELAY);
         }
         last = now;
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -41,16 +49,23 @@ void btn_2_task(void *p) {
     gpio_set_dir(BTN_PIN_G, GPIO_IN);
     gpio_pull_up(BTN_PIN_G);
 
-    int delay = 250;  // blink delay
+    int delay = 0;
     bool last = true;
 
     while (true) {
         bool now = gpio_get(BTN_PIN_G);
-        if (last && !now) {  // button press
+        if (last && !now) {
             while (!gpio_get(BTN_PIN_G)) {
-                vTaskDelay(pdMS_TO_TICKS(10));  // wait for release
+                vTaskDelay(pdMS_TO_TICKS(10));
             }
-            xQueueSend(xQueueButId2, &delay, 0);
+
+            if (delay < 1000) {
+                delay += 100;
+            } else {
+                delay = 100;
+            }
+
+            xQueueSend(xQueueButId2, &delay, portMAX_DELAY);
         }
         last = now;
         vTaskDelay(pdMS_TO_TICKS(10));
@@ -60,15 +75,21 @@ void btn_2_task(void *p) {
 void led_1_task(void *p) {
     gpio_init(LED_PIN_R);
     gpio_set_dir(LED_PIN_R, GPIO_OUT);
+    gpio_put(LED_PIN_R, 0);
 
     int delay = 0;
     while (true) {
         if (xQueueReceive(xQueueButId, &delay, portMAX_DELAY)) {
-            if (delay > 0) {
+            while (delay > 0) {
                 gpio_put(LED_PIN_R, 1);
                 vTaskDelay(pdMS_TO_TICKS(delay));
                 gpio_put(LED_PIN_R, 0);
                 vTaskDelay(pdMS_TO_TICKS(delay));
+
+                int newDelay;
+                if (xQueueReceive(xQueueButId, &newDelay, 0)) {
+                    delay = newDelay;
+                }
             }
         }
     }
@@ -77,15 +98,21 @@ void led_1_task(void *p) {
 void led_2_task(void *p) {
     gpio_init(LED_PIN_G);
     gpio_set_dir(LED_PIN_G, GPIO_OUT);
+    gpio_put(LED_PIN_G, 0);
 
     int delay = 0;
     while (true) {
         if (xQueueReceive(xQueueButId2, &delay, portMAX_DELAY)) {
-            if (delay > 0) {
+            while (delay > 0) {
                 gpio_put(LED_PIN_G, 1);
                 vTaskDelay(pdMS_TO_TICKS(delay));
                 gpio_put(LED_PIN_G, 0);
                 vTaskDelay(pdMS_TO_TICKS(delay));
+
+                int newDelay;
+                if (xQueueReceive(xQueueButId2, &newDelay, 0)) {
+                    delay = newDelay;
+                }
             }
         }
     }
@@ -93,17 +120,15 @@ void led_2_task(void *p) {
 
 int main() {
     stdio_init_all();
-    printf("Start RTOS\n");
 
     xQueueButId  = xQueueCreate(32, sizeof(int));
     xQueueButId2 = xQueueCreate(32, sizeof(int));
 
-    xTaskCreate(btn_1_task, "BTN_Task R", 256, NULL, 1, NULL);
-    xTaskCreate(btn_2_task, "BTN_Task G", 256, NULL, 1, NULL);
-    xTaskCreate(led_1_task, "LED_Task R", 256, NULL, 1, NULL);
-    xTaskCreate(led_2_task, "LED_Task G", 256, NULL, 1, NULL);
+    xTaskCreate(btn_1_task, "BTN R", 256, NULL, 1, NULL);
+    xTaskCreate(btn_2_task, "BTN G", 256, NULL, 1, NULL);
+    xTaskCreate(led_1_task, "LED R", 256, NULL, 1, NULL);
+    xTaskCreate(led_2_task, "LED G", 256, NULL, 1, NULL);
 
     vTaskStartScheduler();
-
     while (true);
 }
