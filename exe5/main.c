@@ -50,6 +50,7 @@ void btn_task(void *p) {
 void led_r_task(void *p) {
     gpio_init(LED_PIN_R);
     gpio_set_dir(LED_PIN_R, GPIO_OUT);
+    gpio_put(LED_PIN_R, 0); 
 
     int blinking = 0;
     while (true) {
@@ -74,6 +75,7 @@ void led_r_task(void *p) {
 void led_y_task(void *p) {
     gpio_init(LED_PIN_Y);
     gpio_set_dir(LED_PIN_Y, GPIO_OUT);
+    gpio_put(LED_PIN_Y, 0); 
 
     int blinking = 0;
     while (true) {
