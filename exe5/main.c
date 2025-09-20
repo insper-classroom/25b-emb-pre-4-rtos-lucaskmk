@@ -27,7 +27,7 @@ void btn_callback(uint gpio, uint32_t events) {
 void led_red_task(void *p) {
     gpio_init(LED_PIN_R);
     gpio_set_dir(LED_PIN_R, true);
-
+    gpio_put(LED_PIN_R, 0);
     int isBlinking = 0;
     while (1) {
         if (xSemaphoreTake(xSemaphore_r, portMAX_DELAY) == pdTRUE) {
@@ -47,7 +47,7 @@ void led_red_task(void *p) {
 void led_yellow_task(void *p) {
     gpio_init(LED_PIN_Y);
     gpio_set_dir(LED_PIN_Y, true);
-
+    gpio_put(LED_PIN_Y, 0);
     int isBlinking = 0;
     while (1) {
         if (xSemaphoreTake(xSemaphore_y, portMAX_DELAY) == pdTRUE) {
