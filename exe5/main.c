@@ -77,7 +77,7 @@ void led_1_task(void *p) {
             gpio_put(LED_PIN_R, 0);
             vTaskDelay(pdMS_TO_TICKS(delay));
         }
-    }
+        }}
 }
 
 void led_2_task(void *p) {
