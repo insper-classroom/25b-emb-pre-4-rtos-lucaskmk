@@ -39,8 +39,7 @@ void led_red_task(void *p) {
             gpio_put(LED_PIN_R, 0);
             vTaskDelay(pdMS_TO_TICKS(100));
         } else {
-            gpio_put(LED_PIN_R, 0);
-            vTaskDelay(pdMS_TO_TICKS(50));
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
     }
 }
@@ -60,8 +59,7 @@ void led_yellow_task(void *p) {
             gpio_put(LED_PIN_Y, 0);
             vTaskDelay(pdMS_TO_TICKS(100));
         } else {
-            gpio_put(LED_PIN_Y, 0);
-            vTaskDelay(pdMS_TO_TICKS(50));
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
     }
 }
