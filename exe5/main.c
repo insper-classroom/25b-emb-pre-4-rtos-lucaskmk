@@ -54,10 +54,10 @@ void btn_1_task(void *p) {
 }
 
 void btn_2_task(void *p) {
-    gpio_init(LED_PIN_Y);
-    gpio_set_dir(LED_PIN_Y, GPIO_IN);
-    gpio_pull_up(LED_PIN_Y);
-    gpio_set_irq_enabled_with_callback(LED_PIN_Y, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
+    gpio_init(BTN_PIN_Y);
+    gpio_set_dir(BTN_PIN_Y, GPIO_IN);
+    gpio_pull_up(BTN_PIN_Y);
+    gpio_set_irq_enabled_with_callback(BTN_PIN_Y, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
 
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(100));   }
