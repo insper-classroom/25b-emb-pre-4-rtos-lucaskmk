@@ -86,7 +86,7 @@ void btn_callback(uint gpio, uint32_t events) {
         if (events & GPIO_IRQ_EDGE_FALL) { // pressionado
              next_led = BTN_PIN_Y;
         }
-        } xQueueSend(xQueueBtn, &next_led,0) ;
+        } xQueueSendFromISR(xQueueBtn, &next_led,0) ;
     }
 
 int main() {
