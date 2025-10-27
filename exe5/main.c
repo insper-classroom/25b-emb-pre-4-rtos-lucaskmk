@@ -64,7 +64,7 @@ void led_y_task(void *p) {
 void btn_task(void* p) {
     int led;
     while (true) {
-        if(xQueueReceive(xQueueBtn, &led, 0)){
+        if(xQueueReceive(xQueueBtn, &led, portMAX_DELAY)){
             if (led == BTN_PIN_R){
                 xSemaphoreGive(xSemaphoreLedR);
             }
@@ -86,7 +86,8 @@ void btn_callback(uint gpio, uint32_t events) {
         if (events & GPIO_IRQ_EDGE_FALL) { // pressionado
              next_led = BTN_PIN_Y;
         }
-        } xQueueSendFromISR(xQueueBtn, &next_led,0) ;
+        } 
+        xQueueSendFromISR(xQueueBtn, &next_led,0);
     }
 
 int main() {
