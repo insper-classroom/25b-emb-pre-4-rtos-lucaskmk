@@ -41,8 +41,8 @@ void led_r_task(void *p) {
                 gpio_put(LED_PIN_R, 0);
                 vTaskDelay(pdMS_TO_TICKS(100)); }
             else gpio_put(LED_PIN_R, 0);
+        }
     }
-}
 
 void led_y_task(void *p) {
     gpio_init(LED_PIN_Y);
@@ -64,7 +64,7 @@ void led_y_task(void *p) {
 void btn_task(void* p) {
     int led;
     while (true) {
-        if(xQueueReceive(xQueueBtn, &led, portMAX_DELAY)){
+        if(xQueueReceive(xQueueBtn, &led, 0)){
             if (led == BTN_PIN_R){
                 xSemaphoreGive(xSemaphoreLedR);
             }
@@ -97,7 +97,15 @@ int main() {
     xTaskCreate(btn_task, "BTN_Task 1", 256, NULL, 1, NULL);
     xTaskCreate(led_r_task, "led_r_task 2", 256, NULL, 1, NULL);
     xTaskCreate(led_y_task, "led_y_task 3", 256, NULL, 1, NULL);
-    
+    gpio_init(BTN_PIN_R);
+    gpio_set_dir(BTN_PIN_R, GPIO_IN);
+    gpio_pull_up(BTN_PIN_R);
+    gpio_init(BTN_PIN_Y);
+    gpio_set_dir(BTN_PIN_Y, GPIO_IN);
+    gpio_pull_up(BTN_PIN_Y);
+    gpio_set_irq_enabled_with_callback(
+        BTN_PIN_R, GPIO_IRQ_EDGE_FALL, true, &btn_callback);
+    gpio_set_irq_enabled(BTN_PIN_Y, GPIO_IRQ_EDGE_FALL, true);
     vTaskStartScheduler();
 
     while(1){}
