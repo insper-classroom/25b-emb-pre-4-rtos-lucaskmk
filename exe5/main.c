@@ -60,7 +60,7 @@ void btn_task(void* p) {
 
 void led_1_task(void *p) {
   gpio_init(LED_PIN_R);
-  gpio_set_dir(LED_PIN_R, GPIO_OUT);
+  gpio_set_dir(LED_PIN_R, GPIO_OUT);gpio_put(LED_PIN_R, 0);
   int delay = 100;
   int piscando = 0;
   while (true) {
@@ -71,13 +71,13 @@ void led_1_task(void *p) {
       vTaskDelay(pdMS_TO_TICKS(delay));
       gpio_put(LED_PIN_R, 0);
       vTaskDelay(pdMS_TO_TICKS(delay));}
-       else { gpio_put(LED_PIN_R, 0);} 
+       else { gpio_put(LED_PIN_R, 0);piscando = 0;} 
   }
 }
 
 void led_2_task(void *p) {
   gpio_init(LED_PIN_Y);
-  gpio_set_dir(LED_PIN_Y, GPIO_OUT);
+  gpio_set_dir(LED_PIN_Y, GPIO_OUT);gpio_put(LED_PIN_Y, 0);
   int delay = 100;
   int piscando2 = 0;
   while (true) {
@@ -88,7 +88,7 @@ void led_2_task(void *p) {
         gpio_put(LED_PIN_Y, 0);
       vTaskDelay(pdMS_TO_TICKS(delay));
     }
-    else{     gpio_put(LED_PIN_Y, 0);}
+    else{     gpio_put(LED_PIN_Y, 0);piscando2 = 0;}
   }
 }
 
@@ -96,7 +96,7 @@ int main() {
     stdio_init_all();
     xQueueBtn = xQueueCreate(32, sizeof(int));
      xSemaphoreLedR = xSemaphoreCreateBinary();
-      xSemaphoreLedR = xSemaphoreCreateBinary();
+      xSemaphoreLedY = xSemaphoreCreateBinary();
     xTaskCreate(btn_task, "BTN_Task 1", 256, NULL, 1, NULL);
       xTaskCreate(led_1_task, "LED_Task 1", 256, NULL, 1, NULL);
   xTaskCreate(led_2_task, "led2", 256, NULL, 1, NULL);
